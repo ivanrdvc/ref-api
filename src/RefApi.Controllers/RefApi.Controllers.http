@@ -1,0 +1,6 @@
+@RefApi.Controllers_HostAddress = http://localhost:5189
+
+GET {{RefApi.Controllers_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

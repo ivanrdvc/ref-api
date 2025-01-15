@@ -1,0 +1,19 @@
+# Core ignores
+.git/
+.vs/
+.vscode/
+.idea/
+.editorconfig
+bin/
+obj/
+
+# Build and temp files
+[Dd]ebug/
+[Rr]elease/
+*.user
+*.userosscache
+*.sln.docstates
+
+# Docker files
+Dockerfile*
+docker-compose*

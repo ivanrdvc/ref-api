@@ -1,0 +1,41 @@
+@RefApi_HostAddress = https://localhost:7019
+
+POST {{RefApi_HostAddress}}/api/v1/chat
+Content-Type: application/json
+Accept: application/json
+
+{
+  "messages": [
+    {
+      "content": "Hello.",
+      "role": "user"
+    }
+  ],
+  "context": {
+    "overrides": {
+      "top": 3,
+      "temperature": 0.7,
+      "minimum_reranker_score": 0.5,
+      "minimum_search_score": 0.5,
+      "retrieval_mode": "Hybrid",
+      "semantic_ranker": true,
+      "semantic_captions": true,
+      "include_category": "",
+      "exclude_category": "",
+      "seed": 42,
+      "prompt_template": "",
+      "prompt_template_prefix": "",
+      "prompt_template_suffix": "",
+      "suggest_followup_questions": true,
+      "use_oid_security_filter": false,
+      "use_groups_security_filter": false,
+      "vector_fields": [
+        "Embedding"
+      ],
+      "use_gpt4v": false,
+      "gpt4v_input": "TextAndImages",
+      "language": "en-US"
+    }
+  },
+  "session_state": ""
+}
