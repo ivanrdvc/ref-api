@@ -9,8 +9,16 @@ using RefApi.Services;
 
 namespace RefApi.Extensions;
 
+/// <summary>
+/// Extension methods for registering AI services with dependency injection.
+/// Configures either OpenAI or Azure OpenAI providers based on AIServiceOptions.Provider setting.
+/// </summary>
 public static class AIServiceExtensions
 {
+    /// <summary>
+    /// Supported provider types for IChatCompletionService registration.
+    /// Provider selection is configured via AIServiceOptions.Provider configuration value.
+    /// </summary>
     private static class Providers
     {
         public const string OpenAI = "openai";
