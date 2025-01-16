@@ -25,8 +25,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RefApi.Controllers", "src\R
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{C59499CD-008B-4834-BADE-218F4F73EAF3}"
 	ProjectSection(SolutionItems) = preProject
-		docs\Managing-EF-Core-Migrations.md = docs\Managing-EF-Core-Migrations.md
-		docs\Authentication-Setup-Guide.md = docs\Authentication-Setup-Guide.md
+		docs\semantic-kernel-di-setup.md = docs\semantic-kernel-di-setup.md
+		docs\managing-ef-core-migrations.md = docs\managing-ef-core-migrations.md
+		docs\authentication-setup-guide.md = docs\authentication-setup-guide.md
 	EndProjectSection
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{3B1D04B8-EE5A-460A-9CFD-F79A6EE2F978}"
