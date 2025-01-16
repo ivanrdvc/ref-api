@@ -10,13 +10,14 @@ builder.Services.AddKernel();
 
 ### Manual Kernel Registration
 ```csharp
-builder.Services.AddTransient<IKernel>(sp =>
+builder.Services.AddTransient<Kernel>(sp =>
 {
-    var builder = new KernelBuilder();
+    var builder = Kernel.CreateBuilder();
     builder.AddOpenAIChatCompletion("gpt-4", "your-api-key");
     return builder.Build();
 });
 ```
+Best practice is to create singletons of your AI services and reuse them in transient kernels using `builder.Services.AddTransient(sp => new Kernel(sp));`.
 
 ## Chat Completion Registration
 

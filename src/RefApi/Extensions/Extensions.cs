@@ -5,14 +5,10 @@ using Asp.Versioning;
 using FluentValidation;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 using RefApi.Common.Behaviors;
 using RefApi.Data;
 using RefApi.Options;
-using RefApi.Services;
 
 namespace RefApi.Extensions;
 
@@ -20,8 +16,8 @@ public static class Extensions
 {
     public static void AddApplicationServices(this IHostApplicationBuilder builder)
     {
+        builder.AddAIServices();
         builder.AddDataServices();
-        builder.AddAiServices();
 
         var services = builder.Services;
 
@@ -35,29 +31,6 @@ public static class Extensions
 
         services.Configure<ClientOptions>(builder.Configuration.GetSection("ClientOptions"));
         services.Configure<AuthClientSetupOptions>(builder.Configuration.GetSection("AuthClientSetupOptions"));
-    }
-
-    private static void AddAiServices(this IHostApplicationBuilder builder)
-    {
-        builder.Services
-            .AddOptions<OpenAIOptions>()
-            .Bind(builder.Configuration.GetSection(nameof(OpenAIOptions)))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        builder.Services
-            .AddOptions<PromptOptions>()
-            .Bind(builder.Configuration.GetSection(nameof(PromptOptions)))
-            .ValidateDataAnnotations()
-            .ValidateOnStart();
-
-        builder.Services.AddScoped<IChatOptionsService, ChatOptionsService>();
-        builder.Services.AddSingleton<IChatCompletionService>(sp =>
-        {
-            var options = sp.GetRequiredService<IOptions<OpenAIOptions>>().Value;
-            return new OpenAIChatCompletionService(options.ChatModelId, options.ApiKey);
-        });
-        builder.Services.AddScoped<IChatService, ChatService>();
     }
 
     private static void AddDataServices(this IHostApplicationBuilder builder)
