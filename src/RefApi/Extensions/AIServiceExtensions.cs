@@ -4,6 +4,7 @@ using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
+using RefApi.Constants;
 using RefApi.Options;
 using RefApi.Services;
 
@@ -15,16 +16,6 @@ namespace RefApi.Extensions;
 /// </summary>
 public static class AIServiceExtensions
 {
-    /// <summary>
-    /// Supported provider types for IChatCompletionService registration.
-    /// Provider selection is configured via AIServiceOptions.Provider configuration value.
-    /// </summary>
-    private static class Providers
-    {
-        public const string OpenAI = "openai";
-        public const string AzureOpenAI = "azureopenai";
-    }
-
     public static void AddAIServices(this IHostApplicationBuilder builder)
     {
         builder.Services
@@ -39,6 +30,9 @@ public static class AIServiceExtensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
+        builder.Services.Configure<AzureAISearchOptions>(
+            builder.Configuration.GetSection(nameof(AzureAISearchOptions)));
+
         builder.Services.AddSingleton<IChatCompletionService>(sp =>
             CreateChatCompletionService(sp.GetRequiredService<IOptions<AIServiceOptions>>().Value));
 
@@ -51,11 +45,11 @@ public static class AIServiceExtensions
     {
         return options.Provider.ToLowerInvariant() switch
         {
-            Providers.OpenAI => new OpenAIChatCompletionService(
+            AIProviders.OpenAI => new OpenAIChatCompletionService(
                 options.OpenAI.ChatModelId,
                 options.OpenAI.ApiKey),
 
-            Providers.AzureOpenAI => new AzureOpenAIChatCompletionService(
+            AIProviders.AzureOpenAI => new AzureOpenAIChatCompletionService(
                 options.AzureOpenAI.ChatDeploymentName,
                 options.AzureOpenAI.Endpoint,
                 options.AzureOpenAI.ApiKey),

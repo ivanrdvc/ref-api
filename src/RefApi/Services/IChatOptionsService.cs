@@ -1,4 +1,4 @@
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Microsoft.SemanticKernel;
 
 using RefApi.Features.Chat.Models;
 
@@ -6,6 +6,6 @@ namespace RefApi.Services;
 
 public interface IChatOptionsService
 {
-    OpenAIPromptExecutionSettings GetExecutionSettings(ChatRequestOverrides overrides);
     string GetSystemPrompt(ChatRequestOverrides overrides);
+    PromptExecutionSettings GetExecutionSettings(ChatRequestOverrides overrides);
 }
