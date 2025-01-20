@@ -1,9 +1,11 @@
 ﻿using MediatR;
 
+using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 using RefApi.Features.Chat.Mapping;
 using RefApi.Features.Chat.Models;
+using RefApi.Options;
 using RefApi.Services;
 
 namespace RefApi.Features.Chat.Commands;
@@ -13,17 +15,21 @@ public record ChatCommand(
     ChatRequestContext Context,
     string? SessionState) : IRequest<ChatResponse>;
 
-public class ChatCommandHandler(IChatCompletionService chat, IChatOptionsService options)
-    : IRequestHandler<ChatCommand, ChatResponse>
+public class ChatCommandHandler(
+    IChatCompletionService chat, 
+    IOptions<PromptOptions> options,
+    IAIProviderFactory providerFactory) : IRequestHandler<ChatCommand, ChatResponse>
 {
+    private readonly PromptOptions _options = options.Value;
+
     public async Task<ChatResponse> Handle(
         ChatCommand request,
         CancellationToken cancellationToken)
     {
         var sessionState = request.SessionState ?? Guid.NewGuid().ToString();
-        var execSettings = options.GetExecutionSettings(request.Context.Overrides);
+        var execSettings = providerFactory.CreateExecutionSettings(request.Context.Overrides);
         var chatHistory = ChatHistoryMapper.CreateFromMessages(request.Messages);
-        chatHistory.AddSystemMessage(options.GetSystemPrompt(request.Context.Overrides));
+        chatHistory.AddSystemMessage(request.Context.Overrides.PromptTemplate ?? _options.Prompt);
 
         var response = await chat.GetChatMessageContentsAsync(
             chatHistory,

@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 
+using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
@@ -9,6 +10,7 @@ using NSubstitute;
 using RefApi.Features.Chat;
 using RefApi.Features.Chat.Commands;
 using RefApi.Features.Chat.Models;
+using RefApi.Options;
 using RefApi.Services;
 
 namespace RefApi.Tests.Unit.Features.Chat.Commands;
@@ -21,11 +23,17 @@ public class ChatCommandHandlerTests
     public ChatCommandHandlerTests()
     {
         _chat = Substitute.For<IChatCompletionService>();
-        var options = Substitute.For<IChatOptionsService>();
-        options.GetSystemPrompt(Arg.Any<ChatRequestOverrides>()).Returns("prompt");
-        options.GetExecutionSettings(Arg.Any<ChatRequestOverrides>()).Returns(new OpenAIPromptExecutionSettings());
+        var providerFactory = Substitute.For<IAIProviderFactory>();
 
-        _handler = new ChatCommandHandler(_chat, options);
+        var promptOptions = new PromptOptions { Prompt = "prompt" };
+        var options = Substitute.For<IOptions<PromptOptions>>();
+        options.Value.Returns(promptOptions);
+        
+        providerFactory
+            .CreateExecutionSettings(Arg.Any<ChatRequestOverrides>())
+            .Returns(new OpenAIPromptExecutionSettings());
+
+        _handler = new ChatCommandHandler(_chat, options, providerFactory);
     }
 
     [Fact]

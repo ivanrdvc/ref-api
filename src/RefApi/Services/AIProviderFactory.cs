@@ -1,10 +1,10 @@
 #pragma warning disable SKEXP0010
 #pragma warning disable AOAI001
-
 using Azure.AI.OpenAI.Chat;
 
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
@@ -14,24 +14,42 @@ using RefApi.Options;
 
 namespace RefApi.Services;
 
-public class ChatOptionsService(
-    IOptions<PromptOptions> options,
-    IOptions<AIServiceOptions> aiOptions,
-    IOptions<AzureAISearchOptions> searchOptions) : IChatOptionsService
+public interface IAIProviderFactory
 {
-    private readonly PromptOptions _options = options.Value;
+    IChatCompletionService CreateChatService();
+    PromptExecutionSettings CreateExecutionSettings(ChatRequestOverrides overrides);
+}
+
+public class AIProviderFactory(
+    IOptions<AIServiceOptions> aiOptions,
+    IOptions<PromptOptions> options,
+    IOptions<AzureAISearchOptions> searchOptions) : IAIProviderFactory
+{
     private readonly AIServiceOptions _aiOptions = aiOptions.Value;
+    private readonly PromptOptions _options = options.Value;
     private readonly AzureAISearchOptions _searchOptions = searchOptions.Value;
 
-    public string GetSystemPrompt(ChatRequestOverrides overrides)
-        => overrides.PromptTemplate ?? _options.Prompt;
+    public IChatCompletionService CreateChatService() =>
+        _aiOptions.Provider.ToLowerInvariant() switch
+        {
+            AIProviders.OpenAI => new OpenAIChatCompletionService(
+                _aiOptions.OpenAI.ChatModelId,
+                _aiOptions.OpenAI.ApiKey),
 
-    public PromptExecutionSettings GetExecutionSettings(ChatRequestOverrides overrides)
+            AIProviders.AzureOpenAI => new AzureOpenAIChatCompletionService(
+                _aiOptions.AzureOpenAI.ChatDeploymentName,
+                _aiOptions.AzureOpenAI.Endpoint,
+                _aiOptions.AzureOpenAI.ApiKey),
+
+            _ => throw new InvalidOperationException($"Unsupported provider: {_aiOptions.Provider}")
+        };
+
+    public PromptExecutionSettings CreateExecutionSettings(ChatRequestOverrides overrides)
     {
-        var settings = _aiOptions.Provider?.ToLowerInvariant() switch
+        var settings = _aiOptions.Provider.ToLowerInvariant() switch
         {
             AIProviders.OpenAI => new OpenAIPromptExecutionSettings(),
-            AIProviders.AzureOpenAI => CreateAzureSettings(overrides),
+            AIProviders.AzureOpenAI => CreateAzureSettings(),
             _ => throw new InvalidOperationException($"Unsupported provider: {_aiOptions.Provider}")
         };
 
@@ -45,9 +63,8 @@ public class ChatOptionsService(
         return settings;
     }
 
-    private AzureOpenAIPromptExecutionSettings CreateAzureSettings(ChatRequestOverrides overrides)
-    {
-        var settings = new AzureOpenAIPromptExecutionSettings
+    private AzureOpenAIPromptExecutionSettings CreateAzureSettings() =>
+        new()
         {
             AzureChatDataSource = new AzureSearchChatDataSource
             {
@@ -62,6 +79,6 @@ public class ChatOptionsService(
             }
         };
 
-        return settings;
-    }
+    public string GetSystemPrompt(ChatRequestOverrides overrides)
+        => overrides.PromptTemplate ?? _options.Prompt;
 }

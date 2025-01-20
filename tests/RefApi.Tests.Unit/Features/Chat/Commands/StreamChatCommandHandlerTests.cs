@@ -1,5 +1,6 @@
 using FluentAssertions;
 
+using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
@@ -9,6 +10,7 @@ using NSubstitute;
 using RefApi.Features.Chat;
 using RefApi.Features.Chat.Commands;
 using RefApi.Features.Chat.Models;
+using RefApi.Options;
 using RefApi.Services;
 
 namespace RefApi.Tests.Unit.Features.Chat.Commands;
@@ -17,15 +19,23 @@ public class StreamChatCommandHandlerTests
 {
     private StreamChatCommandHandler _handler;
     private readonly IChatCompletionService _chat;
+    private readonly IAIProviderFactory _providerFactory;
+    private readonly IOptions<PromptOptions> _options;
 
     public StreamChatCommandHandlerTests()
     {
         _chat = Substitute.For<IChatCompletionService>();
-        IChatOptionsService options = Substitute.For<IChatOptionsService>();
-        options.GetSystemPrompt(Arg.Any<ChatRequestOverrides>()).Returns("prompt");
-        options.GetExecutionSettings(Arg.Any<ChatRequestOverrides>()).Returns(new OpenAIPromptExecutionSettings());
+        _providerFactory = Substitute.For<IAIProviderFactory>();
+        
+        var promptOptions = new PromptOptions { Prompt = "prompt" };
+        _options = Substitute.For<IOptions<PromptOptions>>();
+        _options.Value.Returns(promptOptions);
 
-        _handler = new StreamChatCommandHandler(_chat, options);
+        _providerFactory
+            .CreateExecutionSettings(Arg.Any<ChatRequestOverrides>())
+            .Returns(new OpenAIPromptExecutionSettings());
+
+        _handler = new StreamChatCommandHandler(_chat, _options, _providerFactory);
     }
 
     [Fact]
@@ -106,10 +116,13 @@ public class StreamChatCommandHandlerTests
         var temperature = 0.7;
         var expectedSettings = new OpenAIPromptExecutionSettings { Temperature = temperature };
 
-        var options = Substitute.For<IChatOptionsService>();
-        options.GetExecutionSettings(Arg.Any<ChatRequestOverrides>()).Returns(expectedSettings);
+        // Setup provider factory to return specific settings
+        _providerFactory
+            .CreateExecutionSettings(Arg.Any<ChatRequestOverrides>())
+            .Returns(expectedSettings);
 
-        _handler = new StreamChatCommandHandler(_chat, options);
+        _handler = new StreamChatCommandHandler(_chat, _options, _providerFactory);
+    
         var command = CreateCommand();
         SetupStreamingResponse(["test"]);
 

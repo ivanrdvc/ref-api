@@ -5,10 +5,13 @@ using Asp.Versioning;
 using FluentValidation;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.ChatCompletion;
 
 using RefApi.Common.Behaviors;
 using RefApi.Data;
 using RefApi.Options;
+using RefApi.Services;
 
 namespace RefApi.Extensions;
 
@@ -31,6 +34,31 @@ public static class Extensions
 
         services.Configure<ClientOptions>(builder.Configuration.GetSection("ClientOptions"));
         services.Configure<AuthClientSetupOptions>(builder.Configuration.GetSection("AuthClientSetupOptions"));
+    }
+
+    private static void AddAIServices(this IHostApplicationBuilder builder)
+    {
+        builder.Services
+            .AddOptions<AIServiceOptions>()
+            .Bind(builder.Configuration.GetSection(nameof(AIServiceOptions)))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        builder.Services
+            .AddOptions<PromptOptions>()
+            .Bind(builder.Configuration.GetSection(nameof(PromptOptions)))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        builder.Services.Configure<AzureAISearchOptions>(
+            builder.Configuration.GetSection(nameof(AzureAISearchOptions)));
+
+        builder.Services.AddSingleton<IAIProviderFactory, AIProviderFactory>();
+        builder.Services.AddSingleton<IChatCompletionService>(sp =>
+            sp.GetRequiredService<IAIProviderFactory>().CreateChatService());
+
+        builder.Services.AddTransient(sp => new Kernel(sp));
+        builder.Services.AddScoped<IChatService, ChatService>();
     }
 
     private static void AddDataServices(this IHostApplicationBuilder builder)
