@@ -6,12 +6,11 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 using RefApi.Extensions;
-using RefApi.Features.Conversations;
 using RefApi.Features.Conversations.Commands;
 using RefApi.Features.Conversations.Queries;
 using RefApi.Security;
 
-namespace RefApi.Apis;
+namespace RefApi.Features.Conversations;
 
 public static class ConversationApi
 {
@@ -34,7 +33,7 @@ public static class ConversationApi
             .WithName("GetConversation")
             .WithSummary("Retrieves a specific conversation.")
             .WithDescription("Returns the full conversation including all messages and responses.")
-            .WithGetDefaultResponses<List<ConversationMessage>?>()
+            .WithGetDefaultResponses<List<ConversationMessageDto>?>()
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
         api.MapPost("/", SaveConversation)
@@ -65,7 +64,7 @@ public static class ConversationApi
         return TypedResults.Ok(result);
     }
 
-    private static async Task<Results<Ok<List<ConversationMessage>>, NotFound>> GetConversation(
+    private static async Task<Results<Ok<List<ConversationMessageDto>>, NotFound>> GetConversation(
         Guid id,
         IMediator mediator,
         CancellationToken cancellationToken)

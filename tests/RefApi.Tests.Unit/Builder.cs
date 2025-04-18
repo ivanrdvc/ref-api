@@ -15,9 +15,9 @@ public static class Builder
         ];
     }
 
-    public static List<ConversationMessage> CreateUserAssistantPairs(params (string User, string Assistant)[] pairs)
+    public static List<ConversationMessageDto> CreateUserAssistantPairs(params (string User, string Assistant)[] pairs)
     {
-        return pairs.Select(pair => new ConversationMessage
+        return pairs.Select(pair => new ConversationMessageDto
         {
             User = pair.User,
             Response = new ChatResponse

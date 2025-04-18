@@ -13,7 +13,7 @@ using RefApi.Features.Chat.Commands;
 using RefApi.Features.Chat.Models;
 using RefApi.Security;
 
-namespace RefApi.Apis;
+namespace RefApi.Features.Chat;
 
 public static class ChatApi
 {

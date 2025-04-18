@@ -7,11 +7,11 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 using NSubstitute;
 
+using RefApi.Configuration;
 using RefApi.Features.Chat;
 using RefApi.Features.Chat.Commands;
 using RefApi.Features.Chat.Models;
 using RefApi.Options;
-using RefApi.Services;
 
 namespace RefApi.Tests.Unit.Features.Chat.Commands;
 
@@ -19,23 +19,23 @@ public class StreamChatCommandHandlerTests
 {
     private StreamChatCommandHandler _handler;
     private readonly IChatCompletionService _chat;
-    private readonly IAIProviderFactory _providerFactory;
+    private readonly IAIProviderSettings _providerSettings;
     private readonly IOptions<PromptOptions> _options;
 
     public StreamChatCommandHandlerTests()
     {
         _chat = Substitute.For<IChatCompletionService>();
-        _providerFactory = Substitute.For<IAIProviderFactory>();
+        _providerSettings = Substitute.For<IAIProviderSettings>();
         
         var promptOptions = new PromptOptions { Prompt = "prompt" };
         _options = Substitute.For<IOptions<PromptOptions>>();
         _options.Value.Returns(promptOptions);
 
-        _providerFactory
+        _providerSettings
             .CreateExecutionSettings(Arg.Any<ChatRequestOverrides>())
             .Returns(new OpenAIPromptExecutionSettings());
 
-        _handler = new StreamChatCommandHandler(_chat, _options, _providerFactory);
+        _handler = new StreamChatCommandHandler(_chat, _options, _providerSettings);
     }
 
     [Fact]
@@ -117,11 +117,11 @@ public class StreamChatCommandHandlerTests
         var expectedSettings = new OpenAIPromptExecutionSettings { Temperature = temperature };
 
         // Setup provider factory to return specific settings
-        _providerFactory
+        _providerSettings
             .CreateExecutionSettings(Arg.Any<ChatRequestOverrides>())
             .Returns(expectedSettings);
 
-        _handler = new StreamChatCommandHandler(_chat, _options, _providerFactory);
+        _handler = new StreamChatCommandHandler(_chat, _options, _providerSettings);
     
         var command = CreateCommand();
         SetupStreamingResponse(["test"]);

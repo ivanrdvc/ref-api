@@ -5,13 +5,17 @@ using Asp.Versioning;
 using FluentValidation;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 using RefApi.Common.Behaviors;
+using RefApi.Configuration;
+using RefApi.Constants;
 using RefApi.Data;
 using RefApi.Options;
-using RefApi.Services;
 
 namespace RefApi.Extensions;
 
@@ -52,13 +56,29 @@ public static class Extensions
 
         builder.Services.Configure<AzureAISearchOptions>(
             builder.Configuration.GetSection(nameof(AzureAISearchOptions)));
+        
+        builder.Services.AddSingleton<IAIProviderSettings, AIProviderSettings>();
 
-        builder.Services.AddSingleton<IAIProviderFactory, AIProviderFactory>();
         builder.Services.AddSingleton<IChatCompletionService>(sp =>
-            sp.GetRequiredService<IAIProviderFactory>().CreateChatService());
+        {
+            var aiOptions = sp.GetRequiredService<IOptions<AIServiceOptions>>().Value;
+
+            return aiOptions.Provider.ToLowerInvariant() switch
+            {
+                AIProviders.OpenAI => new OpenAIChatCompletionService(
+                    aiOptions.OpenAI.ChatModelId,
+                    aiOptions.OpenAI.ApiKey),
+
+                AIProviders.AzureOpenAI => new AzureOpenAIChatCompletionService(
+                    aiOptions.AzureOpenAI.ChatDeploymentName,
+                    aiOptions.AzureOpenAI.Endpoint,
+                    aiOptions.AzureOpenAI.ApiKey),
+
+                _ => throw new InvalidOperationException($"Unsupported provider: {aiOptions.Provider}")
+            };
+        });
 
         builder.Services.AddTransient(sp => new Kernel(sp));
-        builder.Services.AddScoped<IChatService, ChatService>();
     }
 
     private static void AddDataServices(this IHostApplicationBuilder builder)

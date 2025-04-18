@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 using RefApi.Options;
 
-namespace RefApi.Apis;
+namespace RefApi.Features.Config;
 
 public static class ConfigApi
 {

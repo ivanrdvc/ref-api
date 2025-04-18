@@ -8,7 +8,7 @@ public record ConversationDto(
     long Timestamp
 );
 
-public record ConversationMessage
+public record ConversationMessageDto
 {
     public required string User { get; init; }
     public required ChatResponse Response { get; init; }

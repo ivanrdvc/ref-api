@@ -8,6 +8,7 @@
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
         <DockerfileContext>..\..</DockerfileContext>
         <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
+        <NoWarn>$(NoWarn);SKEXP0010;AOAI001</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -23,16 +24,12 @@
         </PackageReference>
         <PackageReference Include="Microsoft.SemanticKernel" Version="1.32.0" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.2" />
-        <PackageReference Include="Scalar.AspNetCore" Version="1.2.43" />
+        <PackageReference Include="Scalar.AspNetCore" Version="2.1.11" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
     </ItemGroup>
 
     <ItemGroup>
         <InternalsVisibleTo Include="RefApi.Tests.Integration" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Features\" />
     </ItemGroup>
 
 </Project>

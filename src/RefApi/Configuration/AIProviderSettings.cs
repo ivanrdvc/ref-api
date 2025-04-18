@@ -1,10 +1,7 @@
-#pragma warning disable SKEXP0010
-#pragma warning disable AOAI001
 using Azure.AI.OpenAI.Chat;
 
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
@@ -12,37 +9,21 @@ using RefApi.Constants;
 using RefApi.Features.Chat.Models;
 using RefApi.Options;
 
-namespace RefApi.Services;
+namespace RefApi.Configuration;
 
-public interface IAIProviderFactory
+public interface IAIProviderSettings
 {
-    IChatCompletionService CreateChatService();
     PromptExecutionSettings CreateExecutionSettings(ChatRequestOverrides overrides);
 }
 
-public class AIProviderFactory(
+public class AIProviderSettings(
     IOptions<AIServiceOptions> aiOptions,
     IOptions<PromptOptions> options,
-    IOptions<AzureAISearchOptions> searchOptions) : IAIProviderFactory
+    IOptions<AzureAISearchOptions> searchOptions) : IAIProviderSettings
 {
     private readonly AIServiceOptions _aiOptions = aiOptions.Value;
     private readonly PromptOptions _options = options.Value;
     private readonly AzureAISearchOptions _searchOptions = searchOptions.Value;
-
-    public IChatCompletionService CreateChatService() =>
-        _aiOptions.Provider.ToLowerInvariant() switch
-        {
-            AIProviders.OpenAI => new OpenAIChatCompletionService(
-                _aiOptions.OpenAI.ChatModelId,
-                _aiOptions.OpenAI.ApiKey),
-
-            AIProviders.AzureOpenAI => new AzureOpenAIChatCompletionService(
-                _aiOptions.AzureOpenAI.ChatDeploymentName,
-                _aiOptions.AzureOpenAI.Endpoint,
-                _aiOptions.AzureOpenAI.ApiKey),
-
-            _ => throw new InvalidOperationException($"Unsupported provider: {_aiOptions.Provider}")
-        };
 
     public PromptExecutionSettings CreateExecutionSettings(ChatRequestOverrides overrides)
     {
@@ -78,7 +59,4 @@ public class AIProviderFactory(
                 TopNDocuments = _searchOptions.TopNDocuments
             }
         };
-
-    public string GetSystemPrompt(ChatRequestOverrides overrides)
-        => overrides.PromptTemplate ?? _options.Prompt;
 }

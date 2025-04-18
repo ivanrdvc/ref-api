@@ -7,11 +7,11 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 using NSubstitute;
 
+using RefApi.Configuration;
 using RefApi.Features.Chat;
 using RefApi.Features.Chat.Commands;
 using RefApi.Features.Chat.Models;
 using RefApi.Options;
-using RefApi.Services;
 
 namespace RefApi.Tests.Unit.Features.Chat.Commands;
 
@@ -23,7 +23,7 @@ public class ChatCommandHandlerTests
     public ChatCommandHandlerTests()
     {
         _chat = Substitute.For<IChatCompletionService>();
-        var providerFactory = Substitute.For<IAIProviderFactory>();
+        var providerFactory = Substitute.For<IAIProviderSettings>();
 
         var promptOptions = new PromptOptions { Prompt = "prompt" };
         var options = Substitute.For<IOptions<PromptOptions>>();

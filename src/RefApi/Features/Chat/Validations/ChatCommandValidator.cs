@@ -19,7 +19,7 @@ public class ChatCommandValidator : AbstractValidator<ChatCommand>
 
                 RuleFor(x => x.Messages)
                     .Must(messages => messages.Any(m =>
-                        m.Role.Equals(MessageRole.User.ToString(), StringComparison.OrdinalIgnoreCase)))
+                        m.Role.Equals(MessageRole.User, StringComparison.OrdinalIgnoreCase)))
                     .WithMessage("At least one user message is required");
             });
 

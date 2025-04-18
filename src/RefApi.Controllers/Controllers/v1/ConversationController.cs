@@ -55,9 +55,9 @@ public class ConversationController(IMediator mediator) : ApiControllerBase
     ///
     /// </remarks>
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(List<ConversationMessage>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<ConversationMessageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<List<ConversationMessage>>> GetConversation(
+    public async Task<ActionResult<List<ConversationMessageDto>>> GetConversation(
         Guid id,
         CancellationToken cancellationToken)
     {

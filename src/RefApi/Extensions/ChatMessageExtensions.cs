@@ -1,12 +1,13 @@
-﻿using Microsoft.SemanticKernel.ChatCompletion;
+using Microsoft.SemanticKernel.ChatCompletion;
 
+using RefApi.Features.Chat;
 using RefApi.Features.Chat.Models;
 
-namespace RefApi.Features.Chat.Mapping;
+namespace RefApi.Extensions;
 
-public static class ChatHistoryMapper
+public static class ChatMessageExtensions
 {
-    public static ChatHistory CreateFromMessages(IReadOnlyList<ChatMessage> messages)
+    public static ChatHistory ToChatHistory(this IEnumerable<ChatMessage> messages)
     {
         var chatHistory = new ChatHistory();
 
