@@ -5,7 +5,7 @@ RefAPI is my personal .NET 9 project that showcases my approach to building mode
 ## Prerequisites
 
 To run this project, you'll need:
-- An OpenAI API key
+- An OpenAI or Azure OpenAI API key
 - .NET 9 SDK
 - (Optional) Entra ID configuration for authentication
 
@@ -30,8 +30,8 @@ To run this project, you'll need:
 
 The repository contains two implementations of the same chat API:
 
-1. **Minimal API Version** (`RefApi`): A modern, streamlined implementation using Minimal APIs and newer libraries, focusing on simplicity and practicality
-2. **Controller Version** (`RefApi.Controllers`): A traditional approach using Controllers and established patterns
+1. `RefApi`: A modern implementation using Minimal APIs and newer libraries, focusing on simplicity and practicality
+2. `RefApi.Controllers`: This project showcases a traditional Controller-based API structure
 
 Most of the implementation logic resides in `RefApi`, while `RefApi.Controllers` references and reuses this core functionality. 
 

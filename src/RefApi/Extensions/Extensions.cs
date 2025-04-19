@@ -5,17 +5,12 @@ using Asp.Versioning;
 using FluentValidation;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.AzureOpenAI;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 using RefApi.Common.Behaviors;
 using RefApi.Configuration;
-using RefApi.Constants;
 using RefApi.Data;
-using RefApi.Options;
 
 namespace RefApi.Extensions;
 
@@ -43,8 +38,8 @@ public static class Extensions
     private static void AddAIServices(this IHostApplicationBuilder builder)
     {
         builder.Services
-            .AddOptions<AIServiceOptions>()
-            .Bind(builder.Configuration.GetSection(nameof(AIServiceOptions)))
+            .AddOptions<AIProviderOptions>()
+            .Bind(builder.Configuration.GetSection(nameof(AIProviderOptions)))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -56,27 +51,25 @@ public static class Extensions
 
         builder.Services.Configure<AzureAISearchOptions>(
             builder.Configuration.GetSection(nameof(AzureAISearchOptions)));
-        
-        builder.Services.AddSingleton<IAIProviderSettings, AIProviderSettings>();
+
+        var providerType = builder.Configuration.GetValue<AIProviderType>($"{nameof(AIProviderOptions)}:Provider");
+
+        switch (providerType)
+        {
+            case AIProviderType.OpenAI:
+                builder.Services.AddSingleton<IAIProviderConfiguration, OpenAIProviderConfiguration>();
+                break;
+
+            case AIProviderType.AzureOpenAI:
+                builder.Services.AddSingleton<IAIProviderConfiguration, AzureOpenAIProviderConfiguration>();
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unsupported provider: {providerType}");
+        }
 
         builder.Services.AddSingleton<IChatCompletionService>(sp =>
-        {
-            var aiOptions = sp.GetRequiredService<IOptions<AIServiceOptions>>().Value;
-
-            return aiOptions.Provider.ToLowerInvariant() switch
-            {
-                AIProviders.OpenAI => new OpenAIChatCompletionService(
-                    aiOptions.OpenAI.ChatModelId,
-                    aiOptions.OpenAI.ApiKey),
-
-                AIProviders.AzureOpenAI => new AzureOpenAIChatCompletionService(
-                    aiOptions.AzureOpenAI.ChatDeploymentName,
-                    aiOptions.AzureOpenAI.Endpoint,
-                    aiOptions.AzureOpenAI.ApiKey),
-
-                _ => throw new InvalidOperationException($"Unsupported provider: {aiOptions.Provider}")
-            };
-        });
+            sp.GetRequiredService<IAIProviderConfiguration>().CreateCompletionService());
 
         builder.Services.AddTransient(sp => new Kernel(sp));
     }
@@ -106,7 +99,7 @@ public static class Extensions
 
         return services;
     }
-
+    
     public static IServiceCollection AddCustomApiVersioning(this IServiceCollection services)
     {
         services.AddApiVersioning(options =>

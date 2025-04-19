@@ -1,9 +1,8 @@
 using Microsoft.SemanticKernel.ChatCompletion;
 
-using RefApi.Features.Chat;
 using RefApi.Features.Chat.Models;
 
-namespace RefApi.Extensions;
+namespace RefApi.Features.Chat;
 
 public static class ChatMessageExtensions
 {

@@ -6,9 +6,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 using RefApi.Configuration;
-using RefApi.Extensions;
 using RefApi.Features.Chat.Models;
-using RefApi.Options;
 
 namespace RefApi.Features.Chat.Commands;
 
@@ -19,20 +17,15 @@ public sealed record StreamChatCommand(
 
 public class StreamChatCommandHandler(
     IChatCompletionService chat,
-    IOptions<PromptOptions> options,
-    IAIProviderSettings providerSettings) : IStreamRequestHandler<StreamChatCommand, ChatResponse>
+    IAIProviderConfiguration provider) : IStreamRequestHandler<StreamChatCommand, ChatResponse>
 {
-    private readonly PromptOptions _options = options.Value;
-
     public async IAsyncEnumerable<ChatResponse> Handle(
         StreamChatCommand request,
-        [EnumeratorCancellation]
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var sessionState = request.SessionState ?? Guid.NewGuid().ToString();
-        var execSettings = providerSettings.CreateExecutionSettings(request.Context.Overrides);
+        var execSettings = provider.GetExecutionSettings(request.Context.Overrides);
         var chatHistory = request.Messages.ToChatHistory();
-        chatHistory.AddSystemMessage(request.Context.Overrides.PromptTemplate ?? _options.Prompt);
 
         yield return new ChatResponse
         {

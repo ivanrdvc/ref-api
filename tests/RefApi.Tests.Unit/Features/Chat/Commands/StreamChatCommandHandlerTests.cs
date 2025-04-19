@@ -1,6 +1,5 @@
 using FluentAssertions;
 
-using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
@@ -11,7 +10,6 @@ using RefApi.Configuration;
 using RefApi.Features.Chat;
 using RefApi.Features.Chat.Commands;
 using RefApi.Features.Chat.Models;
-using RefApi.Options;
 
 namespace RefApi.Tests.Unit.Features.Chat.Commands;
 
@@ -19,23 +17,18 @@ public class StreamChatCommandHandlerTests
 {
     private StreamChatCommandHandler _handler;
     private readonly IChatCompletionService _chat;
-    private readonly IAIProviderSettings _providerSettings;
-    private readonly IOptions<PromptOptions> _options;
+    private readonly IAIProviderConfiguration _providerConfigurationMock;
 
     public StreamChatCommandHandlerTests()
     {
         _chat = Substitute.For<IChatCompletionService>();
-        _providerSettings = Substitute.For<IAIProviderSettings>();
-        
-        var promptOptions = new PromptOptions { Prompt = "prompt" };
-        _options = Substitute.For<IOptions<PromptOptions>>();
-        _options.Value.Returns(promptOptions);
+        _providerConfigurationMock = Substitute.For<IAIProviderConfiguration>();
 
-        _providerSettings
-            .CreateExecutionSettings(Arg.Any<ChatRequestOverrides>())
+        _providerConfigurationMock
+            .GetExecutionSettings(Arg.Any<ChatRequestOverrides>())
             .Returns(new OpenAIPromptExecutionSettings());
 
-        _handler = new StreamChatCommandHandler(_chat, _options, _providerSettings);
+        _handler = new StreamChatCommandHandler(_chat, _providerConfigurationMock);
     }
 
     [Fact]
@@ -117,12 +110,12 @@ public class StreamChatCommandHandlerTests
         var expectedSettings = new OpenAIPromptExecutionSettings { Temperature = temperature };
 
         // Setup provider factory to return specific settings
-        _providerSettings
-            .CreateExecutionSettings(Arg.Any<ChatRequestOverrides>())
+        _providerConfigurationMock
+            .GetExecutionSettings(Arg.Any<ChatRequestOverrides>())
             .Returns(expectedSettings);
 
-        _handler = new StreamChatCommandHandler(_chat, _options, _providerSettings);
-    
+        _handler = new StreamChatCommandHandler(_chat, _providerConfigurationMock);
+
         var command = CreateCommand();
         SetupStreamingResponse(["test"]);
 

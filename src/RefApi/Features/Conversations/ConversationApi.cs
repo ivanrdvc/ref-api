@@ -1,6 +1,4 @@
-﻿using Asp.Versioning.Builder;
-
-using MediatR;
+﻿using MediatR;
 
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +12,12 @@ namespace RefApi.Features.Conversations;
 
 public static class ConversationApi
 {
-    public static IEndpointRouteBuilder MapConversationApiV1(this IEndpointRouteBuilder app, ApiVersionSet versionSet)
+    public static IEndpointRouteBuilder MapConversationApi(this IEndpointRouteBuilder app)
     {
-        var api = app.MapGroup("api/v{version:apiVersion}/conversations")
+        var vApi = app.NewVersionedApi("conversations");
+        var api = vApi.MapGroup("api/v{version:apiVersion}/conversations")
+            .HasApiVersion(1, 0)
             .WithTags("Conversations")
-            .WithApiVersionSet(versionSet)
             .WithOpenApi()
             .RequireAuthorization(AuthorizationPolicies.RequireContributor);
 

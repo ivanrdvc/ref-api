@@ -3,21 +3,24 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Extensions.Options;
 
-using RefApi.Options;
+using RefApi.Configuration;
 
 namespace RefApi.Features.Config;
 
 public static class ConfigApi
 {
-    public static IEndpointRouteBuilder MapConfigApiV1(this IEndpointRouteBuilder app, ApiVersionSet versionSet)
+    public static IEndpointRouteBuilder MapConfigApi(this IEndpointRouteBuilder app)
     {
-        app.MapGet("api/v{version:apiVersion}/config", GetConfig)
-            .WithApiVersionSet(versionSet)
+        var vApi = app.NewVersionedApi("Config");
+        var api = vApi.MapGroup("api/v{version:apiVersion}").HasApiVersion(1, 0);
+
+        api.MapGet("/config", GetConfig)
+            .WithName("GetConfig")
             .WithOpenApi()
             .Produces<ClientOptions>();
 
-        app.MapGet("api/v{version:apiVersion}/auth_setup", GetAuthSetup)
-            .WithApiVersionSet(versionSet)
+        api.MapGet("/auth_setup", GetAuthSetup)
+            .WithName("GetAuthSetup")
             .WithOpenApi()
             .Produces<AuthClientSetupOptions>();
 

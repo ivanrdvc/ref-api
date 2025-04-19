@@ -12,8 +12,6 @@ builder.Services
 
 var app = builder.Build();
 
-app.UseGlobalErrorHandling();
-
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();

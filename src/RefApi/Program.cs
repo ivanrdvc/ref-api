@@ -11,13 +11,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddApplicationServices();
 builder.Services.AddHealthChecks();
 
-// Add API-related services
 builder.Services
     .AddCustomAuthentication(builder.Configuration)
+    .AddDefaultOpenApi()
     .AddCustomApiVersioning()
     .AddDefaultCorsPolicy(builder.Configuration)
-    .AddCustomProblemDetails()
-    .AddOpenApi();
+    .AddCustomProblemDetails();
 
 builder.Services.AddExceptionHandler<GlobalProblemDetailsHandler>();
 
@@ -26,8 +25,7 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
-    app.MapOpenApi();
-    app.MapScalarApiReference();
+    app.UseDefaultOpenApi();
 }
 
 app.UseCors();
@@ -36,11 +34,9 @@ app.UseExceptionHandler();
 app.UseAuthentication();
 app.UseAuthorization();
 
-var versionSet = app.NewApiVersionSet().Build();
-
-app.MapChatApiV1(versionSet);
-app.MapConversationApiV1(versionSet);
-app.MapConfigApiV1(versionSet);
+app.MapChatApi();
+app.MapConversationApi();
+app.MapConfigApi();
 app.MapHealthChecks("/healthz");
 
 app.Run();

@@ -1,8 +1,6 @@
 ﻿using System.Text;
 using System.Text.Json;
 
-using Asp.Versioning.Builder;
-
 using MediatR;
 
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -17,28 +15,28 @@ namespace RefApi.Features.Chat;
 
 public static class ChatApi
 {
-    public static IEndpointRouteBuilder MapChatApiV1(this IEndpointRouteBuilder app, ApiVersionSet versionSet)
+    public static IEndpointRouteBuilder MapChatApi(this IEndpointRouteBuilder app)
     {
-        var api = app.MapGroup("api/v{version:apiVersion}/chat")
-            .WithTags("Chat")
-            .WithApiVersionSet(versionSet)
-            .WithOpenApi();
+        var vApi = app.NewVersionedApi("chat");
+        var api = vApi.MapGroup("api/v{version:apiVersion}").HasApiVersion(1, 0);
+
+        api.WithTags("Chat").RequireAuthorization(AuthorizationPolicies.RequireContributor);
 
         api.MapPost("/", SendChat)
             .WithName("SendChat")
             .WithSummary("Processes a chat conversation with AI.")
             .WithDescription("Handles a chat request and returns the AI response.")
-            .WithGetDefaultResponses<ChatResponse>()
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .RequireAuthorization(AuthorizationPolicies.RequireContributor);
+            .WithDefaultResponses()
+            .Produces<ChatResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         api.MapPost("/stream", StreamChat)
             .WithName("StreamChat")
             .WithSummary("Streams a chat conversation with AI.")
             .WithDescription("Processes a chat request and streams the AI response in real-time.")
+            .WithDefaultResponses()
             .Produces(StatusCodes.Status200OK, contentType: "application/x-ndjson")
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .RequireAuthorization(AuthorizationPolicies.RequireContributor);
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         return app;
     }

@@ -11,7 +11,6 @@ using RefApi.Configuration;
 using RefApi.Features.Chat;
 using RefApi.Features.Chat.Commands;
 using RefApi.Features.Chat.Models;
-using RefApi.Options;
 
 namespace RefApi.Tests.Unit.Features.Chat.Commands;
 
@@ -23,17 +22,17 @@ public class ChatCommandHandlerTests
     public ChatCommandHandlerTests()
     {
         _chat = Substitute.For<IChatCompletionService>();
-        var providerFactory = Substitute.For<IAIProviderSettings>();
+        var providerConfigurationMock   = Substitute.For<IAIProviderConfiguration>();
 
         var promptOptions = new PromptOptions { Prompt = "prompt" };
         var options = Substitute.For<IOptions<PromptOptions>>();
         options.Value.Returns(promptOptions);
         
-        providerFactory
-            .CreateExecutionSettings(Arg.Any<ChatRequestOverrides>())
+        providerConfigurationMock  
+            .GetExecutionSettings(Arg.Any<ChatRequestOverrides>())
             .Returns(new OpenAIPromptExecutionSettings());
 
-        _handler = new ChatCommandHandler(_chat, options, providerFactory);
+        _handler = new ChatCommandHandler(_chat, providerConfigurationMock  );
     }
 
     [Fact]
