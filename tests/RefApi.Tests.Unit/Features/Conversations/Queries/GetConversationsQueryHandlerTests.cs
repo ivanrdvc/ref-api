@@ -5,7 +5,7 @@ using RefApi.Features.Conversations.Queries;
 
 namespace RefApi.Tests.Unit.Features.Conversations.Queries;
 
-public class GetConversationsQueryHandlerTests : IClassFixture<DatabaseFixture>, IAsyncLifetime
+public class GetConversationsQueryHandlerTests : IClassFixture<DatabaseFixture>
 {
     private readonly DatabaseFixture _databaseFixture;
     private readonly GetConversationsQueryHandler _handler;
@@ -26,7 +26,7 @@ public class GetConversationsQueryHandlerTests : IClassFixture<DatabaseFixture>,
         var query = new GetConversationsQuery(10);
 
         // Act
-        var result = await _handler.Handle(query, _cancellationToken);
+        var result = await _handler.HandleAsync(query, _cancellationToken);
 
         // Assert
         result.Items.Should().BeEmpty();
@@ -57,7 +57,7 @@ public class GetConversationsQueryHandlerTests : IClassFixture<DatabaseFixture>,
         var query = new GetConversationsQuery(10);
 
         // Act
-        var result = await handler.Handle(query, _cancellationToken);
+        var result = await handler.HandleAsync(query, _cancellationToken);
 
         // Assert
         result.Items.Should().BeEmpty();
@@ -94,7 +94,7 @@ public class GetConversationsQueryHandlerTests : IClassFixture<DatabaseFixture>,
         var query = new GetConversationsQuery(10);
 
         // Act
-        var result = await _handler.Handle(query, _cancellationToken);
+        var result = await _handler.HandleAsync(query, _cancellationToken);
 
         // Assert
         result.Items.Should().HaveCount(1);
@@ -134,7 +134,7 @@ public class GetConversationsQueryHandlerTests : IClassFixture<DatabaseFixture>,
         var query = new GetConversationsQuery(10);
 
         // Act
-        var result = await _handler.Handle(query, _cancellationToken);
+        var result = await _handler.HandleAsync(query, _cancellationToken);
 
         // Assert
         result.Items.Should().HaveCount(2);
@@ -163,7 +163,7 @@ public class GetConversationsQueryHandlerTests : IClassFixture<DatabaseFixture>,
 
         // First page
         var firstQuery = new GetConversationsQuery(2);
-        var firstResult = await _handler.Handle(firstQuery, _cancellationToken);
+        var firstResult = await _handler.HandleAsync(firstQuery, _cancellationToken);
 
         firstResult.Items.Should().HaveCount(2);
         firstResult.ContinuationToken.Should().NotBeNull();
@@ -174,7 +174,7 @@ public class GetConversationsQueryHandlerTests : IClassFixture<DatabaseFixture>,
 
         // Second page
         var secondQuery = new GetConversationsQuery(2, firstResult.ContinuationToken);
-        var secondResult = await _handler.Handle(secondQuery, _cancellationToken);
+        var secondResult = await _handler.HandleAsync(secondQuery, _cancellationToken);
 
         secondResult.Items.Should().HaveCount(2);
         secondResult.ContinuationToken.Should().NotBeNull();
@@ -185,7 +185,7 @@ public class GetConversationsQueryHandlerTests : IClassFixture<DatabaseFixture>,
 
         // Last page
         var lastQuery = new GetConversationsQuery(2, secondResult.ContinuationToken);
-        var lastResult = await _handler.Handle(lastQuery, _cancellationToken);
+        var lastResult = await _handler.HandleAsync(lastQuery, _cancellationToken);
 
         lastResult.Items.Should().HaveCount(1);
         lastResult.ContinuationToken.Should().BeNull();
@@ -201,7 +201,7 @@ public class GetConversationsQueryHandlerTests : IClassFixture<DatabaseFixture>,
         var query = new GetConversationsQuery(10, "invalid");
 
         // Act/Assert
-        await Assert.ThrowsAsync<FormatException>(() => _handler.Handle(query, _cancellationToken));
+        await Assert.ThrowsAsync<FormatException>(() => _handler.HandleAsync(query, _cancellationToken));
     }
 
     public Task InitializeAsync() => Task.CompletedTask;

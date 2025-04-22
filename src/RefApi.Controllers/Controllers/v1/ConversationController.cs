@@ -1,7 +1,5 @@
 ﻿using Asp.Versioning;
 
-using MediatR;
-
 using Microsoft.AspNetCore.Mvc;
 
 using RefApi.Controllers.Common;
@@ -13,7 +11,7 @@ namespace RefApi.Controllers.Controllers.v1;
 
 [Route(ApiConstants.StandardRoute)]
 [ApiVersion(ApiVersions.V1)]
-public class ConversationController(IMediator mediator) : ApiControllerBase
+public class ConversationController() : ApiControllerBase
 {
     /// <summary>
     /// Retrieves paginated conversation history.
@@ -37,9 +35,7 @@ public class ConversationController(IMediator mediator) : ApiControllerBase
         [FromQuery] string? continuationToken,
         CancellationToken cancellationToken)
     {
-        var query = new GetConversationsQuery(count, continuationToken);
-        var result = await mediator.Send(query, cancellationToken);
-        return Ok(result);
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -55,14 +51,13 @@ public class ConversationController(IMediator mediator) : ApiControllerBase
     ///
     /// </remarks>
     [HttpGet("{id:guid}")]
-    [ProducesResponseType(typeof(List<ConversationMessage>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<ConversationMessageDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<List<ConversationMessage>>> GetConversation(
+    public async Task<ActionResult<List<ConversationMessageDto>>> GetConversation(
         Guid id,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetConversationQuery(id), cancellationToken);
-        return result is null ? NotFound() : Ok(result);
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -95,9 +90,7 @@ public class ConversationController(IMediator mediator) : ApiControllerBase
         [FromBody] SaveConversationCommand request,
         CancellationToken cancellationToken)
     {
-        var command = new SaveConversationCommand(request.Id, request.Messages);
-        await mediator.Send(command, cancellationToken);
-        return Ok();
+        throw new NotImplementedException();
     }
 
     /// <summary>
@@ -118,7 +111,6 @@ public class ConversationController(IMediator mediator) : ApiControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var wasDeleted = await mediator.Send(new DeleteConversationCommand(id), cancellationToken);
-        return wasDeleted ? Ok() : NotFound();
+        throw new NotImplementedException();
     }
 }

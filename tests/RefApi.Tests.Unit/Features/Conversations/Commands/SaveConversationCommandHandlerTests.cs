@@ -2,7 +2,6 @@
 
 using Microsoft.EntityFrameworkCore;
 
-using RefApi.Common.Mapping;
 using RefApi.Features.Chat;
 using RefApi.Features.Conversations;
 using RefApi.Features.Conversations.Commands;
@@ -32,7 +31,7 @@ public class SaveConversationCommandHandlerTests : IClassFixture<DatabaseFixture
         var command = new SaveConversationCommand(id, messages);
 
         // Act
-        await _handler.Handle(command, _cancellationToken);
+        await _handler.HandleAsync(command, _cancellationToken);
 
         // Assert
         var savedConversation = await _databaseFixture.DbContext.Conversations
@@ -65,15 +64,14 @@ public class SaveConversationCommandHandlerTests : IClassFixture<DatabaseFixture
 
         await _databaseFixture.DbContext.Conversations.AddAsync(existingConversation, _cancellationToken);
         await _databaseFixture.DbContext.SaveChangesAsync(_cancellationToken);
-        var messages = MessageMapper.ToConversationMessages(
-            Builder.CreateDomainMessagePair("Initial message", "Initial response")
-                .Concat(Builder.CreateDomainMessagePair("Follow up message", "Follow up response")),
-            id);
-
+        var messages = Builder.CreateDomainMessagePair("Initial message", "Initial response")
+            .Concat(Builder.CreateDomainMessagePair("Follow up message", "Follow up response"))
+            .ToConversationMessages(id);
+        
         var command = new SaveConversationCommand(id, messages);
 
         // Act
-        await _handler.Handle(command, _cancellationToken);
+        await _handler.HandleAsync(command, _cancellationToken);
 
         // Assert
         var updatedConversation = await _databaseFixture.DbContext.Conversations
@@ -97,7 +95,7 @@ public class SaveConversationCommandHandlerTests : IClassFixture<DatabaseFixture
         var command = new SaveConversationCommand(Guid.NewGuid(), messages);
 
         // Act
-        var result = await handler.Handle(command, _cancellationToken);
+        var result = await handler.HandleAsync(command, _cancellationToken);
 
         // Assert
         result.Should().BeFalse();

@@ -18,11 +18,11 @@ public static class AuthorizationPolicies
         .Build();
 
     public static AuthorizationPolicy AdminPolicy { get; } = new AuthorizationPolicyBuilder()
-        .RequireRole(Role.Admin.ToString())
+        .RequireRole(nameof(Role.Admin))
         .Build();
 
     public static AuthorizationPolicy ContributorPolicy { get; } = new AuthorizationPolicyBuilder()
-        .RequireRole(Role.Admin.ToString(), Role.Contributor.ToString())
+        .RequireRole(nameof(Role.Admin), nameof(Role.Contributor))
         .Build();
 }
 

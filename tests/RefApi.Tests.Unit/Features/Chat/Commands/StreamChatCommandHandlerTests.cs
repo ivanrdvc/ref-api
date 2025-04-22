@@ -6,10 +6,10 @@ using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 using NSubstitute;
 
+using RefApi.Configuration;
 using RefApi.Features.Chat;
 using RefApi.Features.Chat.Commands;
 using RefApi.Features.Chat.Models;
-using RefApi.Services;
 
 namespace RefApi.Tests.Unit.Features.Chat.Commands;
 
@@ -17,15 +17,18 @@ public class StreamChatCommandHandlerTests
 {
     private StreamChatCommandHandler _handler;
     private readonly IChatCompletionService _chat;
+    private readonly IAIProviderConfiguration _providerConfigurationMock;
 
     public StreamChatCommandHandlerTests()
     {
         _chat = Substitute.For<IChatCompletionService>();
-        IChatOptionsService options = Substitute.For<IChatOptionsService>();
-        options.GetSystemPrompt(Arg.Any<ChatRequestOverrides>()).Returns("prompt");
-        options.GetExecutionSettings(Arg.Any<ChatRequestOverrides>()).Returns(new OpenAIPromptExecutionSettings());
+        _providerConfigurationMock = Substitute.For<IAIProviderConfiguration>();
 
-        _handler = new StreamChatCommandHandler(_chat, options);
+        _providerConfigurationMock
+            .GetExecutionSettings(Arg.Any<ChatRequestOverrides>())
+            .Returns(new OpenAIPromptExecutionSettings());
+
+        _handler = new StreamChatCommandHandler(_chat, _providerConfigurationMock);
     }
 
     [Fact]
@@ -36,7 +39,7 @@ public class StreamChatCommandHandlerTests
         SetupStreamingResponse(["Hello", "world"]);
 
         // Act
-        var responses = await CollectResponses(_handler.Handle(command, CancellationToken.None));
+        var responses = await CollectResponses(_handler.HandleStreamAsync(command, CancellationToken.None));
 
         // Assert
         responses.Should().HaveCount(3, "initial response + 2 content chunks");
@@ -53,7 +56,7 @@ public class StreamChatCommandHandlerTests
         SetupStreamingResponse(["test"]);
 
         // Act
-        var responses = await CollectResponses(_handler.Handle(command, CancellationToken.None));
+        var responses = await CollectResponses(_handler.HandleStreamAsync(command, CancellationToken.None));
 
         // Assert
         var sessionState = responses.First().SessionState;
@@ -70,7 +73,7 @@ public class StreamChatCommandHandlerTests
         SetupStreamingResponse(["test"]);
 
         // Act
-        var responses = await CollectResponses(_handler.Handle(command, CancellationToken.None));
+        var responses = await CollectResponses(_handler.HandleStreamAsync(command, CancellationToken.None));
 
         // Assert
         responses.First().SessionState.Should().Be(existingSession);
@@ -90,7 +93,7 @@ public class StreamChatCommandHandlerTests
             .Returns(CreateStreamingResponse(["test"]));
 
         // Act
-        await CollectResponses(_handler.Handle(command, CancellationToken.None));
+        await CollectResponses(_handler.HandleStreamAsync(command, CancellationToken.None));
 
         // Assert
         capturedHistory.Should().NotBeNull();
@@ -106,15 +109,18 @@ public class StreamChatCommandHandlerTests
         var temperature = 0.7;
         var expectedSettings = new OpenAIPromptExecutionSettings { Temperature = temperature };
 
-        var options = Substitute.For<IChatOptionsService>();
-        options.GetExecutionSettings(Arg.Any<ChatRequestOverrides>()).Returns(expectedSettings);
+        // Setup provider factory to return specific settings
+        _providerConfigurationMock
+            .GetExecutionSettings(Arg.Any<ChatRequestOverrides>())
+            .Returns(expectedSettings);
 
-        _handler = new StreamChatCommandHandler(_chat, options);
+        _handler = new StreamChatCommandHandler(_chat, _providerConfigurationMock);
+
         var command = CreateCommand();
         SetupStreamingResponse(["test"]);
 
         // Act
-        await CollectResponses(_handler.Handle(command, default));
+        await CollectResponses(_handler.HandleStreamAsync(command, default));
 
         // Assert
         _chat.Received(1).GetStreamingChatMessageContentsAsync(

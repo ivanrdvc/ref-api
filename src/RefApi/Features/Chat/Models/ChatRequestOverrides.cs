@@ -17,7 +17,7 @@ public record ChatRequestOverrides
     public int MinimumSearchScore { get; init; }
 
     [JsonPropertyName("retrieval_mode")]
-    public RetrievalMode RetrievalMode { get; init; }
+    public RetrievalMode RetrievalMode { get; init; } = RetrievalMode.Vectors;
 
     [JsonPropertyName("semantic_ranker")]
     public bool SemanticRanker { get; init; }

@@ -1,4 +1,4 @@
-namespace RefApi.Options;
+namespace RefApi.Configuration;
 
 public class PromptOptions
 {

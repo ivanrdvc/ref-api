@@ -40,7 +40,7 @@ public class GetConversationQueryHandlerTests : IClassFixture<DatabaseFixture>
         var query = new GetConversationQuery(id);
 
         // Act
-        var result = await _handler.Handle(query, _cancellationToken);
+        var result = await _handler.HandleAsync(query, _cancellationToken);
 
         // Assert
         result.Should().NotBeNull();
@@ -73,7 +73,7 @@ public class GetConversationQueryHandlerTests : IClassFixture<DatabaseFixture>
         var query = new GetConversationQuery(id);
 
         // Act
-        var result = await _handler.Handle(query, _cancellationToken);
+        var result = await _handler.HandleAsync(query, _cancellationToken);
 
         // Assert
         result.Should().BeNull();
@@ -101,7 +101,7 @@ public class GetConversationQueryHandlerTests : IClassFixture<DatabaseFixture>
         var query = new GetConversationQuery(id);
 
         // Act
-        var result = await handler.Handle(query, _cancellationToken);
+        var result = await handler.HandleAsync(query, _cancellationToken);
 
         // Assert
         result.Should().BeNull();
@@ -129,7 +129,7 @@ public class GetConversationQueryHandlerTests : IClassFixture<DatabaseFixture>
         var query = new GetConversationQuery(id);
 
         // Act
-        var result = await _handler.Handle(query, _cancellationToken);
+        var result = await _handler.HandleAsync(query, _cancellationToken);
 
         // Assert
         result.Should().NotBeNull();

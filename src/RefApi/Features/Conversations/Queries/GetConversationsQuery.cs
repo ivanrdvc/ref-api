@@ -1,18 +1,17 @@
-﻿using MediatR;
+﻿using Microsoft.EntityFrameworkCore;
 
-using Microsoft.EntityFrameworkCore;
-
+using RefApi.Common;
 using RefApi.Data;
 using RefApi.Security;
 
 namespace RefApi.Features.Conversations.Queries;
 
-public record GetConversationsQuery(int Count, string? ContinuationToken = null) : IRequest<GetConversationsResponse>;
+public record GetConversationsQuery(int Count, string? ContinuationToken = null);
 
 public class GetConversationsQueryHandler(AppDbContext dbContext, IUserContext userContext)
     : IRequestHandler<GetConversationsQuery, GetConversationsResponse>
 {
-    public async Task<GetConversationsResponse> Handle(
+    public async Task<GetConversationsResponse> HandleAsync(
         GetConversationsQuery request,
         CancellationToken cancellationToken)
     {

@@ -1,19 +1,18 @@
-﻿using MediatR;
+﻿using Microsoft.EntityFrameworkCore;
 
-using Microsoft.EntityFrameworkCore;
-
+using RefApi.Common;
 using RefApi.Data;
 using RefApi.Features.Chat;
 using RefApi.Security;
 
 namespace RefApi.Features.Conversations.Commands;
 
-public record SaveConversationCommand(Guid Id, List<ConversationMessage> Messages) : IRequest<bool>;
+public record SaveConversationCommand(Guid Id, List<ConversationMessageDto> Messages);
 
 public class SaveConversationCommandHandler(AppDbContext dbContext, IUserContext userContext)
     : IRequestHandler<SaveConversationCommand, bool>
 {
-    public async Task<bool> Handle(
+    public async Task<bool> HandleAsync(
         SaveConversationCommand request,
         CancellationToken cancellationToken)
     {
@@ -55,7 +54,7 @@ public class SaveConversationCommandHandler(AppDbContext dbContext, IUserContext
         return true;
     }
 
-    private static string GenerateTitle(IEnumerable<ConversationMessage> messages)
+    private static string GenerateTitle(IEnumerable<ConversationMessageDto> messages)
     {
         var firstMessage = messages.FirstOrDefault();
         return firstMessage?.User.Length > 50
@@ -63,13 +62,13 @@ public class SaveConversationCommandHandler(AppDbContext dbContext, IUserContext
             : firstMessage?.User ?? "Untitled";
     }
 
-    private static IEnumerable<Message> MapToMessages(ConversationMessage conversationMessage)
+    private static IEnumerable<Message> MapToMessages(ConversationMessageDto conversationMessageDto)
     {
-        yield return new Message { Role = MessageRole.User, Content = conversationMessage.User };
+        yield return new Message { Role = MessageRole.User, Content = conversationMessageDto.User };
 
         yield return new Message
         {
-            Role = MessageRole.Assistant, Content = conversationMessage.Response.Message?.Content ?? string.Empty
+            Role = MessageRole.Assistant, Content = conversationMessageDto.Response.Message?.Content ?? string.Empty
         };
     }
 }

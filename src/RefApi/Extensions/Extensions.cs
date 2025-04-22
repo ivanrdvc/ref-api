@@ -5,14 +5,17 @@ using Asp.Versioning;
 using FluentValidation;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 
-using RefApi.Common.Behaviors;
+using RefApi.Common;
+using RefApi.Configuration;
 using RefApi.Data;
-using RefApi.Options;
-using RefApi.Services;
+using RefApi.Features.Chat.Commands;
+using RefApi.Features.Chat.Models;
+using RefApi.Features.Conversations;
+using RefApi.Features.Conversations.Commands;
+using RefApi.Features.Conversations.Queries;
 
 namespace RefApi.Extensions;
 
@@ -20,28 +23,31 @@ public static class Extensions
 {
     public static void AddApplicationServices(this IHostApplicationBuilder builder)
     {
+        builder.AddAIServices();
         builder.AddDataServices();
-        builder.AddAiServices();
 
         var services = builder.Services;
 
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
 
-        services.AddMediatR(cfg =>
-        {
-            cfg.RegisterServicesFromAssemblyContaining<Program>();
-            cfg.AddOpenBehavior(typeof(ValidatorBehavior<,>));
-        });
+        // TODO: Refactor repetitive IRequestHandler
+        services.AddScoped<IRequestHandler<ChatCommand, ChatResponse>, ChatCommandHandler>();
+        services.AddScoped<IRequestHandler<ChatCommand, ChatResponse>, ChatCommandHandler>();
+        services.AddScoped<IRequestHandler<DeleteConversationCommand, bool>, DeleteConversationCommandHandler>();
+        services.AddScoped<IRequestHandler<SaveConversationCommand, bool>, SaveConversationCommandHandler>();
+        services.AddScoped<IStreamRequestHandler<StreamChatCommand, ChatResponse>, StreamChatCommandHandler>();
+        services.AddScoped<IRequestHandler<GetConversationQuery, List<ConversationMessageDto>?>, GetConversationQueryHandler>();
+        services.AddScoped<IRequestHandler<GetConversationsQuery, GetConversationsResponse>, GetConversationsQueryHandler>();
 
         services.Configure<ClientOptions>(builder.Configuration.GetSection("ClientOptions"));
         services.Configure<AuthClientSetupOptions>(builder.Configuration.GetSection("AuthClientSetupOptions"));
     }
 
-    private static void AddAiServices(this IHostApplicationBuilder builder)
+    private static void AddAIServices(this IHostApplicationBuilder builder)
     {
         builder.Services
-            .AddOptions<OpenAIOptions>()
-            .Bind(builder.Configuration.GetSection(nameof(OpenAIOptions)))
+            .AddOptions<AIProviderOptions>()
+            .Bind(builder.Configuration.GetSection(nameof(AIProviderOptions)))
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
@@ -51,13 +57,29 @@ public static class Extensions
             .ValidateDataAnnotations()
             .ValidateOnStart();
 
-        builder.Services.AddScoped<IChatOptionsService, ChatOptionsService>();
-        builder.Services.AddSingleton<IChatCompletionService>(sp =>
+        builder.Services.Configure<AzureAISearchOptions>(
+            builder.Configuration.GetSection(nameof(AzureAISearchOptions)));
+
+        var providerType = builder.Configuration.GetValue<AIProviderType>($"{nameof(AIProviderOptions)}:Provider");
+
+        switch (providerType)
         {
-            var options = sp.GetRequiredService<IOptions<OpenAIOptions>>().Value;
-            return new OpenAIChatCompletionService(options.ChatModelId, options.ApiKey);
-        });
-        builder.Services.AddScoped<IChatService, ChatService>();
+            case AIProviderType.OpenAI:
+                builder.Services.AddSingleton<IAIProviderConfiguration, OpenAIProviderConfiguration>();
+                break;
+
+            case AIProviderType.AzureOpenAI:
+                builder.Services.AddSingleton<IAIProviderConfiguration, AzureOpenAIProviderConfiguration>();
+                break;
+
+            default:
+                throw new InvalidOperationException($"Unsupported provider: {providerType}");
+        }
+
+        builder.Services.AddSingleton<IChatCompletionService>(sp =>
+            sp.GetRequiredService<IAIProviderConfiguration>().CreateCompletionService());
+
+        builder.Services.AddTransient(sp => new Kernel(sp));
     }
 
     private static void AddDataServices(this IHostApplicationBuilder builder)

@@ -1,51 +1,49 @@
 ﻿using System.Text;
 using System.Text.Json;
 
-using Asp.Versioning.Builder;
-
-using MediatR;
-
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
+using RefApi.Common;
 using RefApi.Extensions;
 using RefApi.Features.Chat.Commands;
 using RefApi.Features.Chat.Models;
 using RefApi.Security;
 
-namespace RefApi.Apis;
+namespace RefApi.Features.Chat;
 
 public static class ChatApi
 {
-    public static IEndpointRouteBuilder MapChatApiV1(this IEndpointRouteBuilder app, ApiVersionSet versionSet)
+    public static IEndpointRouteBuilder MapChatApi(this IEndpointRouteBuilder app)
     {
-        var api = app.MapGroup("api/v{version:apiVersion}/chat")
+        var vApi = app.NewVersionedApi("chat");
+        var api = vApi.MapGroup("api/v{version:apiVersion}/chat")
+            .HasApiVersion(1, 0)
             .WithTags("Chat")
-            .WithApiVersionSet(versionSet)
-            .WithOpenApi();
+            .RequireAuthorization(AuthorizationPolicies.RequireContributor);
 
         api.MapPost("/", SendChat)
             .WithName("SendChat")
             .WithSummary("Processes a chat conversation with AI.")
             .WithDescription("Handles a chat request and returns the AI response.")
-            .WithGetDefaultResponses<ChatResponse>()
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .RequireAuthorization(AuthorizationPolicies.RequireContributor);
+            .WithDefaultResponses()
+            .Produces<ChatResponse>()
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         api.MapPost("/stream", StreamChat)
             .WithName("StreamChat")
             .WithSummary("Streams a chat conversation with AI.")
             .WithDescription("Processes a chat request and streams the AI response in real-time.")
+            .WithDefaultResponses()
             .Produces(StatusCodes.Status200OK, contentType: "application/x-ndjson")
-            .ProducesProblem(StatusCodes.Status400BadRequest)
-            .RequireAuthorization(AuthorizationPolicies.RequireContributor);
+            .ProducesProblem(StatusCodes.Status400BadRequest);
 
         return app;
     }
 
     private static async Task<Results<Ok<ChatResponse>, ProblemHttpResult>> SendChat(
         [FromBody] ChatRequest request,
-        IMediator mediator,
+        IRequestHandler<ChatCommand, ChatResponse> handler,
         CancellationToken cancellationToken)
     {
         var command = new ChatCommand(
@@ -53,14 +51,14 @@ public static class ChatApi
             request.Context,
             request.SessionState);
 
-        var response = await mediator.Send(command, cancellationToken);
+        var response = await handler.HandleAsync(command, cancellationToken);
 
         return TypedResults.Ok(response);
     }
 
     private static IResult StreamChat(
         [FromBody] ChatRequest request,
-        IMediator mediator,
+        IStreamRequestHandler<StreamChatCommand, ChatResponse> handler,
         CancellationToken cancellationToken)
     {
         var command = new StreamChatCommand(
@@ -70,7 +68,7 @@ public static class ChatApi
 
         return Results.Stream(async stream =>
         {
-            await foreach (var response in mediator.CreateStream(command, cancellationToken))
+            await foreach (var response in handler.HandleStreamAsync(command, cancellationToken))
             {
                 var json = JsonSerializer.Serialize(response);
                 var bytes = Encoding.UTF8.GetBytes($"{json}\n");

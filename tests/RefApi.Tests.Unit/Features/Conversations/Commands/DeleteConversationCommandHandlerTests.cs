@@ -41,7 +41,7 @@ public class DeleteConversationCommandHandlerTests : IClassFixture<DatabaseFixtu
         var command = new DeleteConversationCommand(id);
 
         // Act
-        var result = await _handler.Handle(command, _cancellationToken);
+        var result = await _handler.HandleAsync(command, _cancellationToken);
 
         // Assert
         result.Should().BeTrue();
@@ -57,7 +57,7 @@ public class DeleteConversationCommandHandlerTests : IClassFixture<DatabaseFixtu
         var command = new DeleteConversationCommand(Guid.NewGuid());
 
         // Act
-        var result = await _handler.Handle(command, _cancellationToken);
+        var result = await _handler.HandleAsync(command, _cancellationToken);
 
         // Assert
         result.Should().BeFalse();
@@ -83,7 +83,7 @@ public class DeleteConversationCommandHandlerTests : IClassFixture<DatabaseFixtu
         var command = new DeleteConversationCommand(id);
 
         // Act
-        var result = await _handler.Handle(command, _cancellationToken);
+        var result = await _handler.HandleAsync(command, _cancellationToken);
 
         // Assert
         result.Should().BeFalse();
@@ -101,7 +101,7 @@ public class DeleteConversationCommandHandlerTests : IClassFixture<DatabaseFixtu
         var command = new DeleteConversationCommand(Guid.NewGuid());
 
         // Act
-        var result = await handler.Handle(command, _cancellationToken);
+        var result = await handler.HandleAsync(command, _cancellationToken);
 
         // Assert
         result.Should().BeFalse();

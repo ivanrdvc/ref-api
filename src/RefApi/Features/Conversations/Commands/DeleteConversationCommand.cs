@@ -1,18 +1,17 @@
-﻿using MediatR;
+﻿using Microsoft.EntityFrameworkCore;
 
-using Microsoft.EntityFrameworkCore;
-
+using RefApi.Common;
 using RefApi.Data;
 using RefApi.Security;
 
 namespace RefApi.Features.Conversations.Commands;
 
-public record DeleteConversationCommand(Guid Id) : IRequest<bool>;
+public record DeleteConversationCommand(Guid Id);
 
 public class DeleteConversationCommandHandler(AppDbContext dbContext, IUserContext userContext)
     : IRequestHandler<DeleteConversationCommand, bool>
 {
-    public async Task<bool> Handle(DeleteConversationCommand request, CancellationToken cancellationToken)
+    public async Task<bool> HandleAsync(DeleteConversationCommand request, CancellationToken cancellationToken)
     {
         if (userContext.UserId == null)
         {

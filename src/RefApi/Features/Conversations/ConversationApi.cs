@@ -1,26 +1,22 @@
-﻿using Asp.Versioning.Builder;
-
-using MediatR;
-
-using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
+using RefApi.Common;
 using RefApi.Extensions;
-using RefApi.Features.Conversations;
 using RefApi.Features.Conversations.Commands;
 using RefApi.Features.Conversations.Queries;
 using RefApi.Security;
 
-namespace RefApi.Apis;
+namespace RefApi.Features.Conversations;
 
 public static class ConversationApi
 {
-    public static IEndpointRouteBuilder MapConversationApiV1(this IEndpointRouteBuilder app, ApiVersionSet versionSet)
+    public static IEndpointRouteBuilder MapConversationApi(this IEndpointRouteBuilder app)
     {
-        var api = app.MapGroup("api/v{version:apiVersion}/conversations")
+        var vApi = app.NewVersionedApi("conversations");
+        var api = vApi.MapGroup("api/v{version:apiVersion}/conversations")
+            .HasApiVersion(1, 0)
             .WithTags("Conversations")
-            .WithApiVersionSet(versionSet)
-            .WithOpenApi()
             .RequireAuthorization(AuthorizationPolicies.RequireContributor);
 
         api.MapGet("/", GetConversations)
@@ -34,7 +30,7 @@ public static class ConversationApi
             .WithName("GetConversation")
             .WithSummary("Retrieves a specific conversation.")
             .WithDescription("Returns the full conversation including all messages and responses.")
-            .WithGetDefaultResponses<List<ConversationMessage>?>()
+            .WithGetDefaultResponses<List<ConversationMessageDto>?>()
             .ProducesProblem(StatusCodes.Status400BadRequest);
 
         api.MapPost("/", SaveConversation)
@@ -57,38 +53,38 @@ public static class ConversationApi
     private static async Task<Results<Ok<GetConversationsResponse>, ValidationProblem>> GetConversations(
         [FromQuery] int count,
         [FromQuery] string? continuationToken,
-        IMediator mediator,
+        IRequestHandler<GetConversationsQuery, GetConversationsResponse> handler,
         CancellationToken cancellationToken)
     {
         var query = new GetConversationsQuery(count, continuationToken);
-        var result = await mediator.Send(query, cancellationToken);
+        var result = await handler.HandleAsync(query, cancellationToken);
         return TypedResults.Ok(result);
     }
 
-    private static async Task<Results<Ok<List<ConversationMessage>>, NotFound>> GetConversation(
+    private static async Task<Results<Ok<List<ConversationMessageDto>>, NotFound>> GetConversation(
         Guid id,
-        IMediator mediator,
+        IRequestHandler<GetConversationQuery, List<ConversationMessageDto>?> handler,
         CancellationToken cancellationToken)
     {
-        var result = await mediator.Send(new GetConversationQuery(id), cancellationToken);
+        var result = await handler.HandleAsync(new GetConversationQuery(id), cancellationToken);
         return result is null ? TypedResults.NotFound() : TypedResults.Ok(result);
     }
 
     private static async Task<Results<Ok, ValidationProblem>> SaveConversation(
         [FromBody] SaveConversationCommand request,
-        IMediator mediator,
+        IRequestHandler<SaveConversationCommand, bool> handler,
         CancellationToken cancellationToken)
     {
-        await mediator.Send(request, cancellationToken);
+        await handler.HandleAsync(request, cancellationToken);
         return TypedResults.Ok();
     }
 
     private static async Task<Results<Ok, NotFound>> DeleteConversation(
         Guid id,
-        IMediator mediator,
+        IRequestHandler<DeleteConversationCommand, bool> handler,
         CancellationToken cancellationToken)
     {
-        var wasDeleted = await mediator.Send(new DeleteConversationCommand(id), cancellationToken);
+        var wasDeleted = await handler.HandleAsync(new DeleteConversationCommand(id), cancellationToken);
         return wasDeleted ? TypedResults.Ok() : TypedResults.NotFound();
     }
 }

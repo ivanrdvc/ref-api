@@ -1,32 +1,29 @@
 ﻿using System.Runtime.CompilerServices;
 
-using MediatR;
-
 using Microsoft.SemanticKernel.ChatCompletion;
 
-using RefApi.Features.Chat.Mapping;
+using RefApi.Common;
+using RefApi.Configuration;
 using RefApi.Features.Chat.Models;
-using RefApi.Services;
 
 namespace RefApi.Features.Chat.Commands;
 
 public sealed record StreamChatCommand(
     IReadOnlyList<ChatMessage> Messages,
     ChatRequestContext Context,
-    string? SessionState) : IStreamRequest<ChatResponse>;
+    string? SessionState);
 
-public class StreamChatCommandHandler(IChatCompletionService chat, IChatOptionsService options)
-    : IStreamRequestHandler<StreamChatCommand, ChatResponse>
+public class StreamChatCommandHandler(
+    IChatCompletionService chat,
+    IAIProviderConfiguration provider) : IStreamRequestHandler<StreamChatCommand, ChatResponse>
 {
-    public async IAsyncEnumerable<ChatResponse> Handle(
+    public async IAsyncEnumerable<ChatResponse> HandleStreamAsync(
         StreamChatCommand request,
-        [EnumeratorCancellation]
-        CancellationToken cancellationToken)
+        [EnumeratorCancellation] CancellationToken cancellationToken)
     {
         var sessionState = request.SessionState ?? Guid.NewGuid().ToString();
-        var execSettings = options.GetExecutionSettings(request.Context.Overrides);
-        var chatHistory = ChatHistoryMapper.CreateFromMessages(request.Messages);
-        chatHistory.AddSystemMessage(options.GetSystemPrompt(request.Context.Overrides));
+        var execSettings = provider.GetExecutionSettings(request.Context.Overrides);
+        var chatHistory = request.Messages.ToChatHistory();
 
         yield return new ChatResponse
         {

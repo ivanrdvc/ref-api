@@ -1,4 +1,4 @@
-﻿namespace RefApi.Options;
+﻿namespace RefApi.Configuration;
 
 /// <summary>
 /// Configuration options for controlling UI feature visibility in the Azure OpenAI Search demo application.

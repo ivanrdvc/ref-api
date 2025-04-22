@@ -1,18 +1,15 @@
 ﻿using Asp.Versioning;
 
-using MediatR;
-
 using Microsoft.AspNetCore.Mvc;
 
 using RefApi.Controllers.Common;
-using RefApi.Features.Chat.Commands;
 using RefApi.Features.Chat.Models;
 
 namespace RefApi.Controllers.Controllers.v1;
 
 [Route(ApiConstants.StandardRoute)]
 [ApiVersion(ApiVersions.V1)]
-public class ChatController(IMediator mediator) : ApiControllerBase
+public class ChatController() : ApiControllerBase
 {
     /// <summary>
     /// Sends a message within a conversation.
@@ -46,12 +43,7 @@ public class ChatController(IMediator mediator) : ApiControllerBase
         Guid conversationId,
         [FromBody] ChatRequest request)
     {
-        var command = new ChatCommand(
-            request.Messages,
-            request.Context,
-            conversationId.ToString());
-
-        var response = await mediator.Send(command);
-        return Ok(response);
+        throw new NotImplementedException();
+        ;
     }
 }

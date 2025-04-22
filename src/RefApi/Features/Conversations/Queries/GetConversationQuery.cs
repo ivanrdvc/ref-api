@@ -1,19 +1,17 @@
-﻿using MediatR;
+﻿using Microsoft.EntityFrameworkCore;
 
-using Microsoft.EntityFrameworkCore;
-
-using RefApi.Common.Mapping;
+using RefApi.Common;
 using RefApi.Data;
 using RefApi.Security;
 
 namespace RefApi.Features.Conversations.Queries;
 
-public record GetConversationQuery(Guid Id) : IRequest<List<ConversationMessage>?>;
+public record GetConversationQuery(Guid Id);
 
 public class GetConversationQueryHandler(AppDbContext dbContext, IUserContext userContext)
-    : IRequestHandler<GetConversationQuery, List<ConversationMessage>?>
+    : IRequestHandler<GetConversationQuery, List<ConversationMessageDto>?>
 {
-    public async Task<List<ConversationMessage>?> Handle(
+    public async Task<List<ConversationMessageDto>?> HandleAsync(
         GetConversationQuery request,
         CancellationToken cancellationToken)
     {
@@ -21,8 +19,6 @@ public class GetConversationQueryHandler(AppDbContext dbContext, IUserContext us
             .Include(c => c.Messages)
             .FirstOrDefaultAsync(c => c.Id == request.Id && c.UserId == userContext.UserId, cancellationToken);
 
-        return conversation is null
-            ? null
-            : MessageMapper.ToConversationMessages(conversation.Messages, conversation.Id);
+        return conversation?.Messages.ToConversationMessages(conversation.Id);
     }
 }
